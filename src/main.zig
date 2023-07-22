@@ -14,8 +14,7 @@ pub fn main() !void {
     const ally = gpa.allocator();
 
     // Initialize the curses library
-    const window = try curses.initscr(ally);
-    _ = window;
+    const win = try curses.initscr(ally);
     try curses.start_color(); // Enable color support
 
     // Define color pairs
@@ -25,16 +24,14 @@ pub fn main() !void {
     _ = pair2;
 
     // Print some text
-    curses.mvprintw(5, 10, "Hello, colorful world!");
+    try win.mvaddstr(5, 10, "Hello, colorful world!");
 
     // Apply attributes and color pair to specific characters
-    curses.chgat(5, curses.A_BOLD | curses.A_UNDERLINE, 1, null); // Make the first 5 characters bold and underlined using color pair 1
-    curses.chgat(3, curses.A_BOLD, 2, null); // Make the next 3 characters bold using color pair 2
+    // curses.chgat(5, curses.A_BOLD | curses.A_UNDERLINE, 1, null); // Make the first 5 characters bold and underlined using color pair 1
+    // curses.chgat(3, curses.A_BOLD, 2, null); // Make the next 3 characters bold using color pair 2
 
-    curses.refresh(); // Refresh the screen
-
-    curses.getch(); // Wait for a key press
-    curses.endwin(); // End curses mode
+    _ = try win.getch(); // Wait for a key press
+    _ = try curses.endwin(); // End curses mode
 
     // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
     std.debug.print("All your {s} are belong to us.\n", .{"codebase"});

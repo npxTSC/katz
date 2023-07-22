@@ -25,6 +25,7 @@ pub fn build(b: *std.Build) void {
     });
 
     exe.addIncludePath(".");
+    exe.linkSystemLibrary("curses");
     exe.linkLibC();
 
     // This declares intent for the executable to be installed into the
