@@ -1,3 +1,11 @@
+// Katz, a command-line chat client for
+// the Sparklet Katz protocol
+// --- by &Cherry and III_zP0_III (npxTSC)
+//
+// Used this repo for Zig ncurses boilerplate:
+// https://github.com/Akuli/curses-minesweeper
+// <3 Open Source
+
 const std = @import("std");
 const curses = @import("curses.zig");
 const heap = std.heap;
