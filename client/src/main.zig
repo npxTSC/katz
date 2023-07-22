@@ -8,11 +8,11 @@
 
 const std = @import("std");
 const curses = @import("curses.zig");
-const websocket = @import("websocket");
-const ws = @import("sockets.zig");
 const heap = std.heap;
 
-const SRV_ADDR = "127.0.0.1"; // must be an IP address... TODO comptime dns resolution?
+// ok ignore that comment i put here earlier...
+// source: i'm a certified dumbass after 4AM
+const SRV_ADDR = "127.0.0.1";
 const SRV_PORT = 9098; // so serious :3
 
 pub fn main() !void {
@@ -29,15 +29,6 @@ pub fn main() !void {
     // Initialize the curses library
     const win = try curses.initscr(ally);
     try curses.start_color(); // Enable color support
-
-    // this is the instance of your "global" struct to pass into your handlers
-    var context = ws.Context{};
-
-    try websocket.listen(ws.Handler, ally, &context, .{
-        .address = SRV_ADDR,
-        .port = SRV_PORT,
-        .max_headers = 10,
-    });
 
     // Define color pairs
     const pair1 = try curses.ColorPair.init(1, curses.COLOR_RED, curses.COLOR_BLACK);

@@ -1,3 +1,0 @@
-[submodule "client/websocket.zig"]
-	path = client/websocket.zig
-	url = https://github.com/karlseguin/websocket.zig

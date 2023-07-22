@@ -11,9 +11,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe.addModule("websocket", b.createModule(.{
-        .source_file = .{ .path = "websocket.zig/src/websocket.zig" },
-    }));
+    // exe.addModule("websocket", b.createModule(.{
+    //     .source_file = .{ .path = "websocket.zig/src/websocket.zig" },
+    // }));
 
     exe.addIncludePath(".");
     exe.linkSystemLibrary("curses");
