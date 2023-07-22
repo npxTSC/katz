@@ -12,6 +12,9 @@ const websocket = @import("websocket");
 const ws = @import("socket.zig");
 const heap = std.heap;
 
+const SRV_ADDR = "127.0.0.1"; // must be an IP address... TODO comptime dns resolution?
+const SRV_PORT = 9098; // so serious :3
+
 pub fn main() !void {
     var gpa = heap.GeneralPurposeAllocator(.{}){};
     defer {
@@ -31,8 +34,8 @@ pub fn main() !void {
     var context = ws.Context{};
 
     try websocket.listen(ws.Handler, ally, &context, .{
-        .port = 9223,
-        .address = "127.0.0.1",
+        .address = SRV_ADDR,
+        .port = SRV_PORT,
         .max_headers = 10,
     });
 
