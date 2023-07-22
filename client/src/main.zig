@@ -8,6 +8,7 @@
 
 const std = @import("std");
 const curses = @import("curses.zig");
+const websocket = @import("websocket");
 const heap = std.heap;
 
 pub fn main() !void {
