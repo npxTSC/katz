@@ -9,6 +9,7 @@
 const std = @import("std");
 const curses = @import("curses.zig");
 const websocket = @import("websocket");
+const ws = @import("socket.zig");
 const heap = std.heap;
 
 pub fn main() !void {
@@ -25,6 +26,15 @@ pub fn main() !void {
     // Initialize the curses library
     const win = try curses.initscr(ally);
     try curses.start_color(); // Enable color support
+
+    // this is the instance of your "global" struct to pass into your handlers
+    var context = ws.Context{};
+
+    try websocket.listen(ws.Handler, ally, &context, .{
+        .port = 9223,
+        .address = "127.0.0.1",
+        .max_headers = 10,
+    });
 
     // Define color pairs
     const pair1 = try curses.ColorPair.init(1, curses.COLOR_RED, curses.COLOR_BLACK);
