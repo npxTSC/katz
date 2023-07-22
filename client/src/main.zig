@@ -9,7 +9,7 @@
 const std = @import("std");
 const curses = @import("curses.zig");
 const websocket = @import("websocket");
-const ws = @import("socket.zig");
+const ws = @import("sockets.zig");
 const heap = std.heap;
 
 const SRV_ADDR = "127.0.0.1"; // must be an IP address... TODO comptime dns resolution?

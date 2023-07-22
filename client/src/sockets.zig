@@ -4,9 +4,9 @@ const Message = websocket.Message;
 const Handshake = websocket.Handshake;
 
 // Define a struct for "global" data passed into your websocket handler
-const Context = struct {};
+pub const Context = struct {};
 
-const Handler = struct {
+pub const Handler = struct {
     client: *Client,
     context: *Context,
 
