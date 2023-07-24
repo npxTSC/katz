@@ -36,10 +36,11 @@ pub fn main() !void {
     while (true) {
         // Print some text
         try win.attron(pair1.attr());
-        try win.mvaddstr(5, 10, "Hello, colorful world!");
+        try win.mvaddstr(1, 2, "Hello, colorful world!");
         try win.boxme();
 
         const ch = try win.getch(); // Wait for a key press
+
         switch (ch) {
             'q' => {
                 break;
