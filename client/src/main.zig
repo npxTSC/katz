@@ -9,9 +9,20 @@
 const std = @import("std");
 const curses = @import("curses.zig");
 const heap = std.heap;
+const fmt = std.fmt;
 
-// ok ignore that comment i put here earlier...
-// source: i'm a certified dumbass after 4AM
+// yes, this is how we're doing it til I find a single
+// piece of documentation about build.zig.zon files.
+//
+// shut up, it's not a code smell, YOU'RE a code smell ;-;
+const VERSION = [3]u8{ 0, 1, 0 };
+const VERSION_STR = fmt.comptimePrint("{}.{}.{}", .{
+    VERSION[0],
+    VERSION[1],
+    VERSION[2],
+});
+
+// info for default ws server (users can host their own)
 const SRV_ADDR = "127.0.0.1";
 const SRV_PORT = 9098; // so serious :3
 
@@ -36,12 +47,18 @@ pub fn main() !void {
     while (true) {
         // Print some text
         try win.attron(pair1.attr());
-        try win.mvaddstr(1, 2, "Hello, colorful world!");
+
+        try win.mvaddstr(1, 2, fmt.comptimePrint("katz v{s}", .{VERSION_STR}));
+        try win.mvaddstr(4, 2, "q to quit");
         try win.boxme();
 
         const ch = try win.getch(); // Wait for a key press
 
         switch (ch) {
+            'c' => {
+                //
+            },
+
             'q' => {
                 break;
             },
