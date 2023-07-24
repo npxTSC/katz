@@ -44,6 +44,13 @@ pub const Window = struct {
     pub fn getmaxx(self: Window) u16 {
         return @intCast(c.getmaxx(self.win));
     }
+    pub fn getmaxyx(self: Window) [2]u16 {
+        return [2]u16{ self.getmaxy(), self.getmaxx() };
+    }
+
+    pub fn boxme(self: Window) !void {
+        _ = try checkError(c.box(self.win, 0, 0));
+    }
 
     pub fn attron(self: Window, attr: c_int) !void {
         _ = try checkError(c.wattron(self.win, attr));

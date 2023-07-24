@@ -33,10 +33,17 @@ pub fn main() !void {
     // Define color pairs
     const pair1 = try curses.ColorPair.init(1, curses.COLOR_RED, curses.COLOR_BLACK);
 
-    // Print some text
-    try win.attron(pair1.attr());
-    try win.mvaddstr(5, 10, "Hello, colorful world!");
+    while (true) {
+        const x = 1;
+        _ = x;
 
-    _ = try win.getch(); // Wait for a key press
-    _ = try curses.endwin(); // End curses mode
+        // Print some text
+        try win.attron(pair1.attr());
+        try win.mvaddstr(5, 10, "Hello, colorful world!");
+
+        try win.boxme();
+
+        _ = try win.getch(); // Wait for a key press
+        _ = try curses.endwin(); // End curses mode
+    }
 }
