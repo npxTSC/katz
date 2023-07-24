@@ -66,6 +66,10 @@ pub const Window = struct {
     pub fn getch(self: Window) !c_int {
         return checkError(c.wgetch(self.win));
     }
+
+    pub fn refresh(self: Window) !void {
+        _ = try checkError(c.wrefresh(self.win));
+    }
 };
 
 pub const A_STANDOUT = c.MY_A_STANDOUT;
