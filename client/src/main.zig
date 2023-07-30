@@ -52,11 +52,9 @@ pub fn main() !void {
         try win.mvaddstr(4, 2, "q to quit");
         try win.boxme();
 
-        const ch = try win.getch(); // Wait for a key press
-
-        switch (ch) {
-            'c' => {
-                //
+        switch (try win.getch()) {
+            'i' => {
+                try enterMode(.input, &win);
             },
 
             'q' => {
@@ -68,4 +66,30 @@ pub fn main() !void {
     }
 
     _ = try curses.endwin(); // End curses mode
+}
+
+const MODES = enum {
+    input,
+};
+
+fn enterMode(mode: MODES, win: *const curses.Window) !void {
+    var cursorPos: u8 = 0;
+
+    while (true) {
+        switch (mode) {
+            .input => {
+                switch (try win.getch()) {
+                    127 => {
+                        // TODO doesn't detect esc, fix later
+                        break;
+                    },
+
+                    else => |key| {
+                        try win.mvaddch(20, cursorPos, @intCast(key));
+                        cursorPos += 1;
+                    },
+                }
+            },
+        }
+    }
 }

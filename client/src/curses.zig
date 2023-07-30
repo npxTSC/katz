@@ -29,6 +29,10 @@ pub const Window = struct {
         _ = try checkError(c.werase(self.win));
     }
 
+    pub fn mvaddch(self: Window, y: u16, x: u16, ch: u32) !void {
+        _ = try checkError(c.mvwaddch(self.win, y, x, ch));
+    }
+
     pub fn mvaddstr(self: Window, y: u16, x: u16, str: []const u8) !void {
         const cstr: []u8 = try self.allocator.alloc(u8, str.len + 1);
         defer self.allocator.free(cstr);
