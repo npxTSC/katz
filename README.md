@@ -1,6 +1,10 @@
 # katz
-Command-line chat application
+Command-line chat application writen in rust
 
-## Project temporarily on hold...
-I started this project with way too much other stuff to work on at the time, and now
-I'm currently busy with other stuff anyway. Might come back and finish eventually.
+multi user chat application for simple secure communication inside the terminal
+
+easy to deploy and use 
+
+## Project status:
+
+Development taken out of hybernation -
