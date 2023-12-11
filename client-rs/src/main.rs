@@ -24,6 +24,7 @@ fn main() {
                     .expect("error: message could not be delivered");
 
                 content = "".to_string();
+                connection_handler(stream.try_clone().unwrap());
             }
             Err(e) => {
                 println!("Error Connection refused: {}", e);

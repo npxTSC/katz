@@ -2,8 +2,9 @@ use std::collections::HashMap;
 
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
+use tokio::runtime::Runtime;
 //mod chat_channel;
-const SERVER_PORT: i32 = 9000;
+const SERVER_PORT: i31 = 9000;
 
 fn main() {
     //Initilize Server - loading configs
@@ -16,6 +17,17 @@ fn main() {
         let messages = message;
     };
     */
+
+    //maybe sockets?
+
+    let server_sender_port: String = "9001".to_string();
+    let rt = Runtime::new().unwrap();
+    let sender = TcpListener::bind(format!("127.0.0.1:{}", server_sender_port))
+        .expect("failed to bind port");
+    rt.spawn(sender_fn(sender));
+    rt.spawn(receiver_fn(listener));
+}
+async fn receiver_fn(listener: TcpListener) {
     for stream in listener.incoming() {
         match stream {
             Ok(stream) => {
@@ -28,6 +40,23 @@ fn main() {
         }
     }
 }
+
+async fn sender_fn(sender: TcpListener) {
+    loop {
+        for stream in sender.incoming() {
+            match stream {
+                Ok(mut sender_stream) => {
+                    let _ = sender_stream.write("I have cookiez".as_bytes());
+                    println!("send msg");
+                }
+                Err(a) => {
+                    println!("Error writing connection: {}", a);
+                }
+            }
+        }
+    }
+}
+
 struct Connection {
     //   UUID: String,
     timestamp: i32,
