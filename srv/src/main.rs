@@ -16,7 +16,7 @@ struct Channel {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> tokio::io::Result<()> {
     //Initilize Server - loading configs
     let listener =
         TcpListener::bind(format!("127.0.0.1:{}", SERVER_PORT)).expect("failed to bind to port");
@@ -29,19 +29,25 @@ async fn main() {
     let channelz_clone = Arc::clone(&channelz);
     //maybe sockets?
 
-    let server_sender_port: String = "9001".to_string();
     //    let rt = Runtime::new().unwrap();
-
-    let sender = TcpListener::bind(format!("127.0.0.1:{}", server_sender_port))
-        .expect("failed to bind port");
-    let sender_stream = listener.try_clone().unwrap();
-    tokio::spawn(async move {
-        sender_fn(sender_stream, channelz_clone).await;
-    });
-    let channelz_clone = Arc::clone(&channelz);
-    tokio::spawn(async move {
-        receiver_fn(listener, channelz_clone).await;
-    });
+    loop {
+        let stream_accept = listener.accept();
+        match stream_accept {
+            Ok(stream) => {
+                let stream_clone = &stream;
+                tokio::spawn(async move {
+                    sender_fn(stream_clone, channelz_clone).await;
+                });
+                let channelz_clone = Arc::clone(&channelz);
+                tokio::spawn(async move {
+                    receiver_fn(listener, channelz_clone).await;
+                });
+            }
+            Err(a) => {
+                println!("error stream");
+            }
+        }
+    }
 }
 async fn receiver_fn(listener: TcpListener, channelz: Arc<Mutex<Channel>>) {
     for stream in listener.incoming() {
