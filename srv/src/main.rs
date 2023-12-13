@@ -26,21 +26,23 @@ async fn main() -> tokio::io::Result<()> {
         messages: vec!["I like cookiez".to_string()],
     };
     let channelz = Arc::new(Mutex::new(ch));
-    let channelz_clone = Arc::clone(&channelz);
     //maybe sockets?
 
     //    let rt = Runtime::new().unwrap();
     loop {
         let stream_accept = listener.accept();
         match stream_accept {
-            Ok(stream) => {
-                let stream_clone = &stream;
+            Ok(streamz) => {
+                let stream = streamz.0;
+                let stream_clone = stream.try_clone().expect("Error cloning stream");
+                let channelz_clone = Arc::clone(&channelz);
+                let channelz_clone_2 = Arc::clone(&channelz);
                 tokio::spawn(async move {
                     sender_fn(stream_clone, channelz_clone).await;
                 });
-                let channelz_clone = Arc::clone(&channelz);
+
                 tokio::spawn(async move {
-                    receiver_fn(listener, channelz_clone).await;
+                    receiver_fn(stream, channelz_clone_2).await;
                 });
             }
             Err(a) => {
@@ -49,32 +51,19 @@ async fn main() -> tokio::io::Result<()> {
         }
     }
 }
-async fn receiver_fn(listener: TcpListener, channelz: Arc<Mutex<Channel>>) {
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                println!("new connection {}", stream.peer_addr().unwrap());
-                connection_handler(stream) //, &mut connections); //, chat);
-            }
-            Err(e) => {
-                println!("Error incoming connection: {}", e);
-            }
-        }
-    }
+async fn receiver_fn(stream: TcpStream, channelz: Arc<Mutex<Channel>>) {
+    println!("new connection {}", stream.peer_addr().unwrap());
+    connection_handler(stream) //, &mut connections); //, chat);
 }
 
-async fn sender_fn(sender: TcpListener, channelz: Arc<Mutex<Channel>>) {
+async fn sender_fn(mut stream: TcpStream, channelz: Arc<Mutex<Channel>>) {
     loop {
-        for stream in sender.incoming() {
-            match stream {
-                Ok(mut sender_stream) => {
-                    let _ = sender_stream.write("I have cookiez".as_bytes());
-                    println!("send msg");
-                }
-                Err(a) => {
-                    println!("Error writing connection: {}", a);
-                }
-            }
+        let messagez: &Vec<String> = &channelz.lock().await.messages;
+        let _ = stream.write("I have cookiez".as_bytes());
+        for msg in messagez {
+            let message = msg.as_bytes();
+            let _ = stream.write_all(message);
+            println!("send msg");
         }
     }
 }

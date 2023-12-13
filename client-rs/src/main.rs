@@ -1,15 +1,22 @@
 use std::io::{self};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use tokio;
 use tokio::runtime::Runtime;
-fn main() {
+
+#[tokio::main]
+async fn main() {
     const SERVER_IP: &str = "127.0.0.1";
     const SERVER_PORT: u32 = 9000;
     let SERVER_ADDRESS: String = format!("{}:{}", SERVER_IP, SERVER_PORT).to_string();
-    let async_task = Runtime::new().unwrap();
 
+    tokio::spawn(async move {
+        send_messagez(SERVER_ADDRESS).await;
+    });
+}
+async fn send_messagez(server_address: String) {
     loop {
-        match TcpStream::connect(SERVER_ADDRESS.clone()) {
+        match TcpStream::connect(server_address.clone()) {
             Ok(mut stream) => {
                 println!("Connection successfully established");
 
