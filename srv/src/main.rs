@@ -34,7 +34,7 @@ async fn main() {
         //    let rt = Runtime::new().unwrap();
         let stream_accept = listener.accept();
         match stream_accept {
-            Ok(mut streamz) => {
+            Ok(streamz) => {
                 let stream = streamz.0;
                 let stream_clone = stream.try_clone().expect("Error cloning stream");
                 let channelz_clone = Arc::clone(&channelz);
@@ -52,7 +52,7 @@ async fn main() {
                 println!("error stream {}", a);
             }
         }
-        let _ = sleep(Duration::new(5, 0));
+        let _ = sleep(Duration::new(1, 0));
     }
 }
 async fn receiver_fn(mut stream: TcpStream, _channelz: Arc<Mutex<Channel>>) {
@@ -76,10 +76,10 @@ async fn sender_fn(mut stream: TcpStream, channelz: Arc<Mutex<Channel>>) {
     for msg in messagez {
         let message = msg.as_bytes();
         let _ = stream.write_all(message);
-        println!("send msg");
     }
-}
 
+    println!("send msg");
+}
 struct Connection {
     //   UUID: String,
     timestamp: i32,

@@ -16,23 +16,16 @@ async fn main() {
     const SERVER_PORT: u32 = 9000;
     let server_address: String = format!("{}:{}", SERVER_IP, SERVER_PORT).to_string();
 
-    match TcpStream::connect(server_address.clone()) {
-        Ok(mut stream) => {
-            println!("Connection successfully established");
-            let stream_copy = stream.try_clone().expect("couldnt clone stream");
-            tokio::spawn(async move {
-                send_messagez(stream_copy).await;
-            });
-            tokio::spawn(async move {
-                receiver_fn(stream).await;
-            });
-        }
-        Err(e) => {
-            println!("Error Connection refused: {}", e);
-        }
-    }
+    println!("Connection successfully established");
+    let server_address_copy = server_address.clone();
+    tokio::spawn(async move {
+        send_messagez(server_address.clone()).await;
+    });
+    tokio::spawn(async move {
+        receiver_fn(server_address_copy).await;
+    });
 }
-async fn send_messagez(mut stream: TcpStream) {
+async fn send_messagez(server_address: String) {
     loop {
         let mut content: String = Default::default();
 
@@ -40,28 +33,43 @@ async fn send_messagez(mut stream: TcpStream) {
             .read_line(&mut content)
             .expect("I couldnt read the message");
 
-        stream
-            .write(content.as_bytes())
-            .expect("error: message could not be delivered");
+        match TcpStream::connect(server_address.clone()) {
+            Ok(mut stream) => {
+                stream
+                    .write(content.as_bytes())
+                    .expect("error: message could not be delivered");
 
-        content = "".to_string();
-        connection_handler(stream.try_clone().unwrap());
-    }
-}
-async fn receiver_fn(mut stream: TcpStream) {
-    println!("new connection {}", stream.peer_addr().unwrap());
-    let mut buffer = [0; 4096];
-    match stream.read(&mut buffer) {
-        Ok(bytes_read) => {
-            let input = String::from_utf8_lossy(&buffer[..bytes_read]);
-            println!("{}", input);
-        }
-        Err(e) => {
-            println!("Error handling buffer: {}", e);
+                content = "".to_string();
+                connection_handler(stream.try_clone().unwrap());
+            }
+            Err(a) => {
+                println!("error {}", a);
+            }
         }
     }
 }
-
+async fn receiver_fn(server_address: String) {
+    loop {
+        match TcpStream::connect(server_address.clone()) {
+            Ok(mut stream) => {
+                println!("new connection {}", stream.peer_addr().unwrap());
+                let mut buffer = [0; 4096];
+                match stream.read(&mut buffer) {
+                    Ok(bytes_read) => {
+                        let input = String::from_utf8_lossy(&buffer[..bytes_read]);
+                        println!("{}", input);
+                    }
+                    Err(e) => {
+                        println!("Error handling buffer: {}", e);
+                    }
+                }
+            }
+            Err(a) => {
+                println!("error {}", a);
+            }
+        }
+    }
+}
 //async fn listen(stream: TcpStream) {
 //    let listener = TcpListener::bind("127.0.0.1:4000").expect("failed to bind incoming port");
 
@@ -79,7 +87,6 @@ async fn receiver_fn(mut stream: TcpStream) {
 
 fn connection_handler(mut stream: TcpStream) {
     let mut buffer = [0; 4096];
-
     match stream.read(&mut buffer) {
         Ok(bytes_read) => {
             let input = String::from_utf8_lossy(&buffer[..bytes_read]);
