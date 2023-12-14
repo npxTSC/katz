@@ -4,10 +4,9 @@ use crossterm::{
     terminal::{Clear, ClearType},
 };
 use std::io::{self};
-use std::io::{Read, Write};
+use std::io::{stdout, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
-
 use tokio;
 
 #[tokio::main]
@@ -52,23 +51,31 @@ async fn receiver_fn(server_address: String) {
     loop {
         match TcpStream::connect(server_address.clone()) {
             Ok(mut stream) => {
+                clear_terminal().await;
+
                 println!("new connection {}", stream.peer_addr().unwrap());
                 let mut buffer = [0; 4096];
                 match stream.read(&mut buffer) {
                     Ok(bytes_read) => {
                         let input = String::from_utf8_lossy(&buffer[..bytes_read]);
-                        println!("{}", input);
+                        println!("$~: {}", input);
                     }
                     Err(e) => {
                         println!("Error handling buffer: {}", e);
                     }
                 }
+
+                let _ = tokio::time::sleep(tokio::time::Duration::from_secs(5));
             }
             Err(a) => {
                 println!("error {}", a);
             }
         }
     }
+}
+async fn clear_terminal() {
+    let mut stdout = stdout();
+    let _ = execute!(stdout, Clear(ClearType::All));
 }
 //async fn listen(stream: TcpStream) {
 //    let listener = TcpListener::bind("127.0.0.1:4000").expect("failed to bind incoming port");
