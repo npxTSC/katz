@@ -3,9 +3,11 @@ use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::sync::Arc;
+use std::time::Duration;
 use tokio;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
+use tokio::time::sleep;
 //mod chat_channel;
 const SERVER_PORT: i32 = 9000;
 
@@ -16,7 +18,7 @@ struct Channel {
 }
 
 #[tokio::main]
-async fn main() -> tokio::io::Result<()> {
+async fn main() {
     //Initilize Server - loading configs
     let listener =
         TcpListener::bind(format!("127.0.0.1:{}", SERVER_PORT)).expect("failed to bind to port");
@@ -28,11 +30,11 @@ async fn main() -> tokio::io::Result<()> {
     let channelz = Arc::new(Mutex::new(ch));
     //maybe sockets?
 
-    //    let rt = Runtime::new().unwrap();
     loop {
+        //    let rt = Runtime::new().unwrap();
         let stream_accept = listener.accept();
         match stream_accept {
-            Ok(streamz) => {
+            Ok(mut streamz) => {
                 let stream = streamz.0;
                 let stream_clone = stream.try_clone().expect("Error cloning stream");
                 let channelz_clone = Arc::clone(&channelz);
@@ -45,49 +47,40 @@ async fn main() -> tokio::io::Result<()> {
                     receiver_fn(stream, channelz_clone_2).await;
                 });
             }
+
             Err(a) => {
-                println!("error stream");
+                println!("error stream {}", a);
             }
+        }
+        let _ = sleep(Duration::new(5, 0));
+    }
+}
+async fn receiver_fn(mut stream: TcpStream, _channelz: Arc<Mutex<Channel>>) {
+    println!("new connection {}", stream.peer_addr().unwrap());
+    let mut buffer = [0; 4096];
+    match stream.read(&mut buffer) {
+        Ok(bytes_read) => {
+            let input = String::from_utf8_lossy(&buffer[..bytes_read]);
+            println!("{}", input);
+            _channelz.lock().await.messages.push(input.to_string());
+        }
+        Err(e) => {
+            println!("Error handling buffer: {}", e);
         }
     }
 }
-async fn receiver_fn(stream: TcpStream, channelz: Arc<Mutex<Channel>>) {
-    println!("new connection {}", stream.peer_addr().unwrap());
-    connection_handler(stream) //, &mut connections); //, chat);
-}
 
 async fn sender_fn(mut stream: TcpStream, channelz: Arc<Mutex<Channel>>) {
-    loop {
-        let messagez: &Vec<String> = &channelz.lock().await.messages;
-        let _ = stream.write("I have cookiez".as_bytes());
-        for msg in messagez {
-            let message = msg.as_bytes();
-            let _ = stream.write_all(message);
-            println!("send msg");
-        }
+    let messagez: &Vec<String> = &channelz.lock().await.messages;
+    //let _ = stream.write("I have cookiez".as_bytes());
+    for msg in messagez {
+        let message = msg.as_bytes();
+        let _ = stream.write_all(message);
+        println!("send msg");
     }
 }
 
 struct Connection {
     //   UUID: String,
     timestamp: i32,
-}
-
-fn connection_handler(
-    mut stream: TcpStream,
-    //    _connections: &mut HashMap<UUID, Connection>,
-    //    chat: Chat,
-) {
-    let mut buffer = [0; 4096];
-
-    match stream.read(&mut buffer) {
-        Ok(bytes_read) => {
-            let input = String::from_utf8_lossy(&buffer[..bytes_read]);
-            println!("{}", input);
-            let _ = stream.write(format!("msg: {}", input).as_bytes());
-        }
-        Err(e) => {
-            println!("Error handling buffer: {}", e);
-        }
-    }
 }

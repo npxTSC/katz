@@ -1,41 +1,63 @@
+#[allow(unused_imports)]
+use crossterm::{
+    execute,
+    terminal::{Clear, ClearType},
+};
 use std::io::{self};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::sync::Arc;
+
 use tokio;
-use tokio::runtime::Runtime;
 
 #[tokio::main]
 async fn main() {
     const SERVER_IP: &str = "127.0.0.1";
     const SERVER_PORT: u32 = 9000;
-    let SERVER_ADDRESS: String = format!("{}:{}", SERVER_IP, SERVER_PORT).to_string();
+    let server_address: String = format!("{}:{}", SERVER_IP, SERVER_PORT).to_string();
 
-    tokio::spawn(async move {
-        send_messagez(SERVER_ADDRESS).await;
-    });
+    match TcpStream::connect(server_address.clone()) {
+        Ok(mut stream) => {
+            println!("Connection successfully established");
+            let stream_copy = stream.try_clone().expect("couldnt clone stream");
+            tokio::spawn(async move {
+                send_messagez(stream_copy).await;
+            });
+            tokio::spawn(async move {
+                receiver_fn(stream).await;
+            });
+        }
+        Err(e) => {
+            println!("Error Connection refused: {}", e);
+        }
+    }
 }
-async fn send_messagez(server_address: String) {
+async fn send_messagez(mut stream: TcpStream) {
     loop {
-        match TcpStream::connect(server_address.clone()) {
-            Ok(mut stream) => {
-                println!("Connection successfully established");
+        let mut content: String = Default::default();
 
-                let mut content: String = Default::default();
+        io::stdin()
+            .read_line(&mut content)
+            .expect("I couldnt read the message");
 
-                io::stdin()
-                    .read_line(&mut content)
-                    .expect("I couldnt read the message");
+        stream
+            .write(content.as_bytes())
+            .expect("error: message could not be delivered");
 
-                stream
-                    .write(content.as_bytes())
-                    .expect("error: message could not be delivered");
-
-                content = "".to_string();
-                connection_handler(stream.try_clone().unwrap());
-            }
-            Err(e) => {
-                println!("Error Connection refused: {}", e);
-            }
+        content = "".to_string();
+        connection_handler(stream.try_clone().unwrap());
+    }
+}
+async fn receiver_fn(mut stream: TcpStream) {
+    println!("new connection {}", stream.peer_addr().unwrap());
+    let mut buffer = [0; 4096];
+    match stream.read(&mut buffer) {
+        Ok(bytes_read) => {
+            let input = String::from_utf8_lossy(&buffer[..bytes_read]);
+            println!("{}", input);
+        }
+        Err(e) => {
+            println!("Error handling buffer: {}", e);
         }
     }
 }
