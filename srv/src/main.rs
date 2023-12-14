@@ -1,5 +1,8 @@
+#[allow(unused_imports)]
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+use serde_json;
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::sync::Arc;
@@ -8,7 +11,7 @@ use tokio;
 use tokio::runtime::Runtime;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
-//mod chat_channel;
+mod chatchannel;
 const SERVER_PORT: i32 = 9000;
 
 struct Channel {
@@ -22,11 +25,18 @@ async fn main() {
     //Initilize Server - loading configs
     let listener =
         TcpListener::bind(format!("127.0.0.1:{}", SERVER_PORT)).expect("failed to bind to port");
-    let ch = Channel {
+    //     let ch = Channel {
+    //        UUID: 0,
+    //        userz: vec![0, 1],
+    //        messages: vec!["I like cookiez".to_string()],
+    //    };
+
+    let ch = chatchannel::ChatChannel {
         UUID: 0,
-        userz: vec![0, 1],
-        messages: vec!["I like cookiez".to_string()],
+        //        userz: vec![0, 1],
+        messagez: vec!["I like cookiez".to_string()],
     };
+
     let channelz = Arc::new(Mutex::new(ch));
     //maybe sockets?
 
@@ -55,14 +65,14 @@ async fn main() {
         let _ = sleep(Duration::new(1, 0));
     }
 }
-async fn receiver_fn(mut stream: TcpStream, _channelz: Arc<Mutex<Channel>>) {
+async fn receiver_fn(mut stream: TcpStream, channelz: Arc<Mutex<chatchannel::ChatChannel>>) {
     println!("new connection {}", stream.peer_addr().unwrap());
     let mut buffer = [0; 4096];
     match stream.read(&mut buffer) {
         Ok(bytes_read) => {
             let input = String::from_utf8_lossy(&buffer[..bytes_read]);
-            println!("{}", input);
-            _channelz.lock().await.messages.push(input.to_string());
+            println!("$~{}", input);
+            channelz.lock().await.messagez.push(input.to_string());
         }
         Err(e) => {
             println!("Error handling buffer: {}", e);
@@ -70,14 +80,15 @@ async fn receiver_fn(mut stream: TcpStream, _channelz: Arc<Mutex<Channel>>) {
     }
 }
 
-async fn sender_fn(mut stream: TcpStream, channelz: Arc<Mutex<Channel>>) {
-    let messagez: &Vec<String> = &channelz.lock().await.messages;
+async fn sender_fn(mut stream: TcpStream, channelz: Arc<Mutex<chatchannel::ChatChannel>>) {
     //let _ = stream.write("I have cookiez".as_bytes());
-    for msg in messagez {
-        let message = msg.as_bytes();
-        let _ = stream.write_all(message);
-    }
-
+    //    for msg in channelz.lock().await.messagez {
+    //        let message = msg.as_bytes();
+    //        let _ = stream.write_all(message);
+    //   }
+    let channel = channelz.lock().await;
+    let chat = serde_json::to_vec(&*channel).unwrap();
+    let _ = stream.write_all(&chat);
     println!("send msg");
 }
 struct Connection {
