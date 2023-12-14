@@ -38,7 +38,6 @@ async fn main() {
     };
 
     let channelz = Arc::new(Mutex::new(ch));
-    //maybe sockets?
 
     loop {
         //    let rt = Runtime::new().unwrap();
@@ -71,15 +70,24 @@ async fn receiver_fn(mut stream: TcpStream, channelz: Arc<Mutex<chatchannel::Cha
     match stream.read(&mut buffer) {
         Ok(bytes_read) => {
             let input = String::from_utf8_lossy(&buffer[..bytes_read]);
-            println!("$~{}", input);
-            channelz.lock().await.messagez.push(input.to_string());
+            if input.is_empty() {
+                println!("empty line"); //todo!()
+            } else {
+                println!("$~{}", input);
+                channelz.lock().await.messagez.push(input.to_string());
+                channelz_check(channelz).await;
+            }
         }
         Err(e) => {
             println!("Error handling buffer: {}", e);
         }
     }
 }
-
+async fn channelz_check(channelz: Arc<Mutex<chatchannel::ChatChannel>>) {
+    if channelz.lock().await.messagez.len() > 12 {
+        channelz.lock().await.messagez.remove(0);
+    }
+}
 async fn sender_fn(mut stream: TcpStream, channelz: Arc<Mutex<chatchannel::ChatChannel>>) {
     //let _ = stream.write("I have cookiez".as_bytes());
     //    for msg in channelz.lock().await.messagez {

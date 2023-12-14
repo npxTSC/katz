@@ -89,11 +89,11 @@ async fn clear_terminal() {
     let progress = execute!(stdout, Clear(ClearType::All));
     match progress {
         Ok(a) => {
-            println!("terminal cleared");
+            //            println!("terminal cleared");
             let pro = stdout.flush();
             match pro {
                 Ok(a) => {
-                    println!("flush completed");
+                    //                    println!("flush completed");
                 }
                 Err(a) => {
                     println!("error flushing {}", a);
