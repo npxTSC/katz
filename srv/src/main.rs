@@ -70,7 +70,7 @@ async fn receiver_fn(mut stream: TcpStream, channelz: Arc<Mutex<chatchannel::Cha
     match stream.read(&mut buffer) {
         Ok(bytes_read) => {
             let input = String::from_utf8_lossy(&buffer[..bytes_read]);
-            if input.is_empty() {
+            if input.len() < 2 {
                 println!("empty line"); //todo!()
             } else {
                 println!("$~{}", input);
