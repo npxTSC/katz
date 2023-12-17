@@ -65,12 +65,12 @@ async fn main() {
     }
 }
 async fn receiver_fn(mut stream: TcpStream, channelz: Arc<Mutex<chatchannel::ChatChannel>>) {
-    println!("new connection {}", stream.peer_addr().unwrap());
     let mut buffer = [0; 4096];
     match stream.read(&mut buffer) {
         Ok(bytes_read) => {
+            println!("new connection {}", stream.peer_addr().unwrap());
             let input = String::from_utf8_lossy(&buffer[..bytes_read]);
-            if input.len() < 2 {
+            if input.len() < 0 {
                 println!("empty line"); //todo!()
             } else {
                 println!("$~{}", input);

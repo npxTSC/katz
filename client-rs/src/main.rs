@@ -11,10 +11,10 @@ use std::io::{stdout, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 use std::thread;
-use std::time::Duration;
 use tokio;
 use tokio::runtime::Runtime;
 use tokio::time;
+use tokio::time::{sleep_until, Duration, Instant};
 mod chatchannel;
 #[tokio::main]
 async fn main() {
@@ -25,8 +25,8 @@ async fn main() {
     println!("Connection successfully established");
     let server_address_copy = server_address.clone();
 
-    //    tokio::spawn(check_messagez(server_address_copy));
-    check_messagez(server_address_copy).await;
+    //    let _a = tokio::spawn(check_messagez(server_address_copy.clone())).await;
+    //check_messagez(server_address_copy).await;
     tokio::spawn(async move {
         send_messagez(server_address.clone()).await;
     });
@@ -60,21 +60,40 @@ async fn send_messagez(server_address: String) {
     }
 }
 async fn check_messagez(server_address: String) {
-    //    loop {
-    println!("up");
-    println!("-");
-    match TcpStream::connect(server_address.clone()) {
-        Ok(mut stream) => {
-            //todo!()
-            //not receiving when loaded
-            //            receiver_fn(stream.try_clone().unwrap()).await;
-            println!("updated");
+    loop {
+        clear_terminal().await;
+        println!("up");
+        println!("-");
+        match TcpStream::connect(server_address.clone()) {
+            Ok(mut stream) => {
+                //todo!()
+                //not receiving when loaded
+                //receiver_fn(stream.try_clone().unwrap()).await;
+                println!("updated");
+                let mut buffer = Vec::new(); //[0; 4096];
+                match stream.read_to_end(&mut buffer) {
+                    Ok(_bytes_read) => {
+                        //let mut chat = chatchannel::ChatChannel::new();
+                        // todo!();
+                        let chat: chatchannel::ChatChannel =
+                            serde_json::from_slice(&buffer).unwrap();
+                        //            let input = String::from_utf8_lossy(&buffer[..bytes_read]);
+                        for message in chat.messagez {
+                            println!("$~: {}", message);
+                        }
+                    }
+                    Err(e) => {
+                        println!("Error handling buffer: {}", e);
+                    }
+                }
+            }
+            Err(a) => {
+                println!("error {}", a);
+            }
         }
-        Err(a) => {
-            println!("error {}", a);
-        }
+        sleep_until(Instant::now() + Duration::from_secs(5)).await;
+        println!("was sleeping");
     }
-    //    }
 }
 
 async fn receiver_fn(mut stream: TcpStream) {
@@ -99,13 +118,6 @@ async fn receiver_fn(mut stream: TcpStream) {
             println!("Error handling buffer: {}", e);
         }
     }
-
-    //      }
-    //    Err(a) => {
-    //           println!("error {}", a);
-    //       }
-    //   }
-    //}
 }
 async fn clear_terminal() {
     let mut stdout = stdout();
